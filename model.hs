@@ -4,7 +4,8 @@ import qualified Csg
 import qualified Csg.STL
 import qualified Data.Text.IO as T
 
-rBev = 10
+rBevOuter = 10
+rBevInner = 6
 rDial = 60
 
 wPan = rDial + 20
@@ -19,8 +20,8 @@ sphere = Csg.unitSphere 8 4
 
 hTop = hBase + (dPan * sin panAngle)
 
-object :: Csg.BspTree
-object = Csg.unionConcat $ concat [
+basicShape :: Double -> Csg.BspTree
+basicShape rBev  = Csg.unionConcat $ concat [
     let c i = Csg.translate (i*dTop, 0, 0) $ Csg.rotate (1, 0, 0) (pi/2) $ 
                Csg.scale (rBev, rBev, wPan) $ cylinder
      in [(c 0.5),(c $ negate 0.5)], 
@@ -57,6 +58,8 @@ object = Csg.unionConcat $ concat [
         in [s i | i <- [0.5, -0.5]]
   ]
 
+ovject :: Csg.BspTree
+object = basicShape rBevOuter `Csg.subtract` (Csg.translate (0, 0, -eps) $ basicShape rBevInner)
 
 path = "rotary-encoder.stl"
 

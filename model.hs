@@ -10,6 +10,8 @@ rDial = 60/2
 dialClearance = 1 
 wallT = 4
 dialInset = 5
+hDial = 35
+
 
 wPan = rDial*2 + 20
 dPan = wPan
@@ -20,14 +22,14 @@ hBase = 15
 
 dTotal = dTop + dPan * cos panAngle 
 
-cylinder = Csg.unitCylinder 8
-sphere = Csg.unitSphere 8 4
+cylinder = Csg.unitCylinder 32
+sphere = Csg.unitSphere 32 16
 
 hTop = hBase + (dPan * sin panAngle)
 
 ledsCyl = Csg.scale (5/2, 5/2, 100) $ Csg.unitCylinder 12
 nLeds = 12
-shaftR= 6/2
+shaftR= 7/2
 
 basicShape :: Double -> Csg.BspTree
 basicShape rBev  = Csg.unionConcat $ concat [
@@ -110,11 +112,36 @@ base = let h = 2
          [Csg.translate (dTotal *i, wPan*j, 0) $ Csg.scale (rBevInner, rBevInner, h) $ cylinder | i <- [-0.5, 0.5], j <- [-0.5, 0.5]]
         ))) `Csg.subtract` (Csg.unionConcat $ (`Csg.translate` screw) <$> holePositions)
 
+dial = let rFinger = 8
+           dFinger = 3
+           rDialShaft = 6.25/2
+        in(Csg.scale (rDial, rDial, hDial) $ Csg.translate (0, 0, 0.5) $ Csg.unitCylinder 32)
+          `Csg.subtract` 
+         (Csg.unionConcat [
+            Csg.translate (rDial - rFinger -2, 0, hDial) $ Csg.scale (rFinger, rFinger, dFinger) $ Csg.unitSphere 16 8,
+            Csg.scale (10, 10, 6) $ Csg.unitCylinder 12,
+            (Csg.scale (rDialShaft, rDialShaft, 20*2) $ Csg.unitCylinder 16)
+              `Csg.subtract`
+             (Csg.translate (1.5, 0 ,0) $ 
+               Csg.uniformScale 1000 $ Csg.translate (0.5 , 0, 0) $ Csg.unitCube)
+          ])
+
+dialMask = let rFinger = 8
+               dFinger = 3
+               rDialShaft = 6/2
+            in (Csg.scale (rDial, rDial, 0.5) $ Csg.translate (0, 0, 0.5) $ Csg.unitCylinder 32)
+              `Csg.subtract` 
+               ( Csg.translate (rDial - rFinger -2, 0, hDial) $ Csg.scale (rFinger, rFinger, 1000) $ Csg.unitCylinder 32
+               )
+
 path = "rotary-encoder.stl"
 pathBase = "rotary-encoder-base.stl"
-
+pathDial = "rotary-encoder-dial.stl"
+pathDialMask = "rotary-encoder-dial-mask.stl"
 
 main :: IO ()
 main = do 
   --T.writeFile path $ Csg.STL.toSTL object
-  T.writeFile pathBase $ Csg.STL.toSTL base
+  --T.writeFile pathBase $ Csg.STL.toSTL base
+  T.writeFile pathDial $ Csg.STL.toSTL (rotateDialIntoPlace dial)
+  --T.writeFile pathDialMask $ Csg.STL.toSTL dialMask

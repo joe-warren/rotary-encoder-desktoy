@@ -11,6 +11,8 @@ Encoder dial(4, 5);
 long offset = 2000 * 4;
 long mode = 0;
 long pos = offset;
+long lastButtonPress = 0;
+long debounceDelay = 50;  
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -57,10 +59,10 @@ void doAction (long dir){
          Mouse.move(0, 0, dir);
          break;
      case 2:
-         Mouse.move(-dir*10, 0, 0);
+         Mouse.move(-dir*25, 0, 0);
          break;
      case 3:
-         Mouse.move(0, dir*10, 0);
+         Mouse.move(0, -dir*25, 0);
          break;
      case 4:
          Mouse.press(dir<0? MOUSE_RIGHT : MOUSE_LEFT);
@@ -70,10 +72,10 @@ void doAction (long dir){
          doKeypress(dir, KEY_RIGHT, KEY_LEFT);
          break;
      case 6:
-         doKeypress(dir, KEY_UP, KEY_DOWN);
+         doKeypress(dir, KEY_DOWN, KEY_UP);
          break;
      case 7:
-         doKeypress(dir, KEY_PAGE_UP, KEY_PAGE_DOWN);
+         doKeypress(dir, KEY_PAGE_DOWN, KEY_PAGE_UP);
          break;
     case 8:
          Keyboard.press(MODIFIERKEY_ALT);
@@ -106,8 +108,9 @@ void doAction (long dir){
 
 void loop() {
   long newPos;
+  long tNew = millis();
   newPos = (dial.read() + offset)/4;
-  if (newPos != pos) {
+  if (newPos != pos && tNew > lastButtonPress + debounceDelay) {
     bool isDown = !digitalRead(3);
     long dir = newPos - pos;
     if(isDown){
@@ -116,6 +119,8 @@ void loop() {
     } else {
       doAction(dir);
     }
+    lastButtonPress = tNew;
+    pos = newPos;
   }
-  pos = newPos;
+  
 }
